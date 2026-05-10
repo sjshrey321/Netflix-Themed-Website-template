@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Our Story</title>
+  <meta name="description" content="A Netflix-themed memory site for two. Made with love, deployed with GitHub Pages." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-scene="boot">
+
+  <!-- ════════════════════════════════════════════════════════════
+       SCENE 1 — BOOT
+       ════════════════════════════════════════════════════════════ -->
+  <section class="scene scene-boot active" id="sceneBoot">
+
+    <!-- Tap-to-begin gate (required for autoplay-with-sound) -->
+    <div class="entry-gate" id="entryGate">
+      <div class="entry-logo">N</div>
+      <div class="tap-prompt">
+        <span class="tap-icon"></span>
+        <span data-text="boot.tapPrompt">Tap to Begin</span>
+      </div>
+      <div class="sound-hint" data-text="boot.soundHint">🔊 Best Experienced With Sound On</div>
+    </div>
+
+    <!-- Boot stage -->
+    <div class="boot-stage">
+      <video class="boot-video" id="bootVideo" playsinline preload="auto">
+        <source src="assets/intro/intro.mp4" type="video/mp4">
+      </video>
+      <div class="boot-fallback" id="bootFallback" hidden>
+        <div class="netflix-logo">NETFLIX</div>
+        <div class="netflix-tagline" data-text="boot.tagline">A Love Story</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════
+       SCENE 2 — PROFILES
+       ════════════════════════════════════════════════════════════ -->
+  <section class="scene scene-profiles" id="sceneProfiles">
+    <h1 class="who-watching" data-text="profileScreen.heading">Who's watching?</h1>
+    <div class="profiles" id="profilesContainer"><!-- rendered by app.js --></div>
+    <button class="manage-btn" data-text="profileScreen.manageButton">Manage Profiles</button>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════
+       SCENE 3 — HOME
+       ════════════════════════════════════════════════════════════ -->
+  <section class="scene scene-home" id="sceneHome">
+
+    <!-- Sidebar (shared between Home + Credits) -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-logo">N</div>
+
+      <div class="sb-item" data-nav="home">
+        <div class="sb-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.172 2.5 11.086V21a1 1 0 0 0 1 1h6v-7h5v7h6a1 1 0 0 0 1-1v-9.914L12 3.172z"/></svg>
+        </div>
+        <div class="sb-label">Home</div>
+      </div>
+
+      <div class="sb-profiles" id="sidebarProfiles"><!-- rendered by app.js --></div>
+
+      <div class="sb-spacer"></div>
+
+      <div class="sb-item" data-nav="credits">
+        <div class="sb-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 8h18l-1.5-3.5L17 6l-2-3-3 1-2-3-3 1L5 1 3 5v3zm0 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9H3z"/></svg>
+        </div>
+        <div class="sb-label">Credits</div>
+      </div>
+    </aside>
+
+    <main class="home-main">
+      <!-- Hero -->
+      <section class="hero">
+        <div class="hero-media">
+          <video class="hero-video" id="heroVideo" autoplay loop muted playsinline></video>
+          <img class="hero-img" id="heroImg" alt="" hidden>
+          <div class="hero-media-placeholder" id="heroPlaceholder">hero asset goes here</div>
+        </div>
+
+        <div class="hero-content">
+          <div class="hero-tag">
+            <span class="n-mark">N</span>
+            <span id="heroLabelText">SERIES</span>
+          </div>
+          <h1 class="hero-title" id="heroTitle"></h1>
+          <div class="hero-buttons">
+            <button class="hero-btn play" id="heroPlayBtn"><span data-text="hero.playLabel">▶ Play</span></button>
+            <button class="hero-btn info"><span data-text="hero.infoLabel">ⓘ More Info</span></button>
+          </div>
+          <p class="hero-desc" id="heroDesc"></p>
+        </div>
+      </section>
+
+      <!-- Memory rows -->
+      <div class="rows" id="rows"><!-- rendered by app.js --></div>
+    </main>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════
+       SCENE 4 — CREDITS
+       ════════════════════════════════════════════════════════════ -->
+  <section class="scene scene-credits" id="sceneCredits">
+
+    <!-- Background -->
+    <div class="credits-bg">
+      <img id="creditsBgImg" src="assets/credits/credits-bg.jpg" alt=""
+           onload="this.classList.add('loaded')"
+           onerror="this.style.display='none'">
+    </div>
+
+    <!-- Sidebar (re-render of same component) -->
+    <aside class="sidebar" id="sidebarCredits">
+      <div class="sb-logo">N</div>
+
+      <div class="sb-item" data-nav="home">
+        <div class="sb-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.172 2.5 11.086V21a1 1 0 0 0 1 1h6v-7h5v7h6a1 1 0 0 0 1-1v-9.914L12 3.172z"/></svg>
+        </div>
+        <div class="sb-label">Home</div>
+      </div>
+
+      <div class="sb-profiles" id="sidebarProfilesCredits"></div>
+
+      <div class="sb-spacer"></div>
+
+      <div class="sb-item active" data-nav="credits">
+        <div class="sb-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 8h18l-1.5-3.5L17 6l-2-3-3 1-2-3-3 1L5 1 3 5v3zm0 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9H3z"/></svg>
+        </div>
+        <div class="sb-label">Credits</div>
+      </div>
+    </aside>
+
+    <!-- Floating clip player -->
+    <div class="clip-player">
+      <video id="creditsClip" autoplay muted loop playsinline>
+        <source src="assets/credits/credits-clip.mp4" type="video/mp4">
+      </video>
+      <div class="clip-placeholder" id="creditsClipPlaceholder">your clip plays here</div>
+
+      <div class="clip-controls">
+        <button class="clip-pause" id="clipPauseBtn" title="Pause">
+          <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+        </button>
+        <div class="clip-bottom">
+          <button class="clip-mute" id="clipMuteBtn" title="Unmute">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 10v4a1 1 0 0 0 1 1h3l4 4a1 1 0 0 0 1.7-.7V5.7a1 1 0 0 0-1.7-.7L7 9H4a1 1 0 0 0-1 1zm14.5 2-2.6 2.6a1 1 0 1 1-1.4-1.4l1.2-1.2-1.2-1.2a1 1 0 1 1 1.4-1.4l1.2 1.2 1.2-1.2a1 1 0 1 1 1.4 1.4L18.9 12l1.2 1.2a1 1 0 1 1-1.4 1.4L17.5 12z"/></svg>
+          </button>
+          <div class="clip-progress"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rolling credits -->
+    <div class="credits-wrap">
+      <div class="credits-roll" id="creditsRoll"><!-- rendered by app.js --></div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════
+       FULLSCREEN PLAYER (overlay, used from Home → Play)
+       ════════════════════════════════════════════════════════════ -->
+  <div class="fs-player" id="fsPlayer">
+    <button class="fs-close" id="fsClose" title="Close">✕</button>
+    <video id="fsVideo" controls playsinline></video>
+    <div class="fs-no-video" id="fsNoVideo" hidden>
+      🎬 hero video for this profile is missing — drop it in <code>assets/heroes/</code>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════
+       SCRIPTS
+       ════════════════════════════════════════════════════════════ -->
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

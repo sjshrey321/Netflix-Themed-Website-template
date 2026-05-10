@@ -1,0 +1,367 @@
+/* ═══════════════════════════════════════════════════════════════════
+   YOUR LOVE STORY — APP LOGIC
+   - Scene transitions (boot → profiles → home → credits)
+   - Profile state + sidebar nav
+   - Hero per-profile rendering
+   - Memory rows with graceful image fallback
+   - Fullscreen video player
+   - Rolling credits + clip player controls
+   - Template substitution ({you}, {them}, {location})
+   ═══════════════════════════════════════════════════════════════════ */
+
+(() => {
+  const cfg = window.SITE_CONFIG;
+  if (!cfg) {
+    console.error('config.js failed to load — site cannot start');
+    return;
+  }
+
+  // ──────────────────────────────────────────────────────────────────
+  // Template helper: replace {you}, {them}, {location} anywhere
+  // ──────────────────────────────────────────────────────────────────
+  const tpl = (str = '') => String(str)
+    .replaceAll('{you}',      cfg.partners.you)
+    .replaceAll('{them}',     cfg.partners.them)
+    .replaceAll('{location}', cfg.location);
+
+  // Look up dotted path on config (e.g. "boot.tagline")
+  const dotPath = (path) => path.split('.').reduce((o, k) => o?.[k], cfg);
+
+  // ──────────────────────────────────────────────────────────────────
+  // Apply data-text bindings from HTML to config values
+  // ──────────────────────────────────────────────────────────────────
+  document.querySelectorAll('[data-text]').forEach(el => {
+    const v = dotPath(el.dataset.text);
+    if (v != null) el.textContent = tpl(v);
+  });
+
+  // ──────────────────────────────────────────────────────────────────
+  // Scene management
+  // ──────────────────────────────────────────────────────────────────
+  const scenes = {
+    boot:     document.getElementById('sceneBoot'),
+    profiles: document.getElementById('sceneProfiles'),
+    home:     document.getElementById('sceneHome'),
+    credits:  document.getElementById('sceneCredits')
+  };
+
+  function showScene(name) {
+    Object.entries(scenes).forEach(([k, el]) => {
+      if (k === name) el.classList.add('active');
+      else el.classList.remove('active');
+    });
+    document.body.dataset.scene = name;
+    window.scrollTo(0, 0);
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  // SCENE 1 — BOOT
+  // ══════════════════════════════════════════════════════════════════
+  const entryGate    = document.getElementById('entryGate');
+  const bootVideo    = document.getElementById('bootVideo');
+  const bootFallback = document.getElementById('bootFallback');
+
+  let bootVideoOk = true;
+  bootVideo.addEventListener('error', () => { bootVideoOk = false; });
+
+  entryGate.addEventListener('click', async () => {
+    entryGate.classList.add('hide');
+
+    if (bootVideoOk) {
+      try {
+        bootVideo.muted = false;
+        bootVideo.volume = 1;
+        await bootVideo.play();
+        bootVideo.addEventListener('ended', () => showScene('profiles'), { once: true });
+        // Safety: also advance after 8s in case browser denied playback silently
+        setTimeout(() => {
+          if (document.body.dataset.scene === 'boot') showScene('profiles');
+        }, 8500);
+        return;
+      } catch (err) {
+        bootVideoOk = false;
+      }
+    }
+
+    // Fallback: show animated NETFLIX logo
+    bootVideo.hidden = true;
+    bootFallback.hidden = false;
+    setTimeout(() => showScene('profiles'), 4000);
+  });
+
+  // ══════════════════════════════════════════════════════════════════
+  // SCENE 2 — PROFILES (rendered from config)
+  // ══════════════════════════════════════════════════════════════════
+  const profilesContainer = document.getElementById('profilesContainer');
+
+  cfg.profileOrder.forEach(id => {
+    const p = cfg.profiles[id];
+    if (!p) return;
+
+    const card = document.createElement('div');
+    card.className = 'profile';
+    card.dataset.id = id;
+    card.dataset.name = p.label;
+
+    // Build a placeholder text like "1 / MONTH" or "1 / YEAR"
+    const m = id.match(/^(\d+)(month|year)/);
+    const num  = m ? m[1] : '?';
+    const unit = m ? (m[2].toUpperCase() + (m[1] !== '1' ? 'S' : '')) : '';
+
+    card.innerHTML = `
+      <div class="avatar">
+        <img src="assets/profiles/profile-${id}.jpg" alt="${p.label}"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="avatar-placeholder" style="display:flex;">
+          <span class="pl-num">${num}</span>
+          <span class="pl-unit">${unit}</span>
+        </div>
+      </div>
+      <div class="profile-name">${p.label}</div>
+    `;
+
+    card.addEventListener('click', () => loadProfile(id));
+    profilesContainer.appendChild(card);
+  });
+
+  // ══════════════════════════════════════════════════════════════════
+  // SIDEBAR — render profile shortcuts in both sidebars
+  // ══════════════════════════════════════════════════════════════════
+  function renderSidebarProfiles(target) {
+    target.innerHTML = '';
+    cfg.profileOrder.forEach(id => {
+      const p = cfg.profiles[id];
+      const m = id.match(/^(\d+)(month|year)/);
+      const short = m ? (m[1] + (m[2][0].toUpperCase())) : id;
+
+      const item = document.createElement('div');
+      item.className = 'sb-item';
+      item.dataset.profile = id;
+      item.innerHTML = `
+        <img src="assets/profiles/profile-${id}.jpg" class="sb-icon-img" alt=""
+             onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'sb-icon-placeholder p-${id}',textContent:'${short}'}))">
+        <div class="sb-label">${p.label}</div>
+      `;
+      item.addEventListener('click', () => loadProfile(id));
+      target.appendChild(item);
+    });
+  }
+  renderSidebarProfiles(document.getElementById('sidebarProfiles'));
+  renderSidebarProfiles(document.getElementById('sidebarProfilesCredits'));
+
+  // Sidebar Home / Credits nav links
+  document.querySelectorAll('[data-nav]').forEach(el => {
+    el.addEventListener('click', () => {
+      const target = el.dataset.nav;
+      if (target === 'home')    { if (!currentProfile) loadProfile(cfg.profileOrder[0]); else showScene('home'); }
+      if (target === 'credits') showScene('credits');
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════════════
+  // SCENE 3 — HOME (rendered per profile)
+  // ══════════════════════════════════════════════════════════════════
+  let currentProfile = null;
+
+  const heroVideo       = document.getElementById('heroVideo');
+  const heroImg         = document.getElementById('heroImg');
+  const heroPlaceholder = document.getElementById('heroPlaceholder');
+  const heroLabelText   = document.getElementById('heroLabelText');
+  const heroTitle       = document.getElementById('heroTitle');
+  const heroDesc        = document.getElementById('heroDesc');
+  const rowsContainer   = document.getElementById('rows');
+
+  function loadProfile(id) {
+    const profile = cfg.profiles[id];
+    if (!profile) return;
+
+    currentProfile = id;
+
+    // Hero text
+    heroLabelText.textContent = profile.heroLabel || 'N SERIES';
+    heroTitle.textContent     = tpl(cfg.heroTitleTemplate);
+    heroDesc.textContent      = tpl(profile.heroDescription);
+
+    // Hero media — try video first, then jpg, else placeholder
+    heroPlaceholder.style.display = '';
+    heroImg.hidden = true;
+    heroVideo.style.display = '';
+    heroVideo.pause();
+    heroVideo.removeAttribute('src');
+    heroVideo.querySelectorAll('source').forEach(s => s.remove());
+
+    const videoSrc = `assets/heroes/hero-${id}.mp4`;
+    const imgSrc   = `assets/heroes/hero-${id}.jpg`;
+
+    const source = document.createElement('source');
+    source.src = videoSrc;
+    source.type = 'video/mp4';
+    heroVideo.appendChild(source);
+    heroVideo.load();
+
+    heroVideo.addEventListener('loadeddata', () => {
+      heroPlaceholder.style.display = 'none';
+      heroImg.hidden = true;
+    }, { once: true });
+
+    heroVideo.addEventListener('error', () => {
+      // Try image fallback
+      heroVideo.style.display = 'none';
+      heroImg.src = imgSrc;
+      heroImg.hidden = false;
+      heroImg.addEventListener('load', () => { heroPlaceholder.style.display = 'none'; }, { once: true });
+      heroImg.addEventListener('error', () => { heroImg.hidden = true; }, { once: true });
+    }, { once: true });
+
+    // Rows
+    rowsContainer.innerHTML = '';
+    Object.entries(profile.rows).forEach(([rowKey, row]) => {
+      const sec = document.createElement('div');
+      sec.className = `row ${rowKey}`;
+      sec.innerHTML = `<h2 class="row-title">${row.title}</h2><div class="row-cards"></div>`;
+      const cards = sec.querySelector('.row-cards');
+      for (let i = 1; i <= (row.count || 6); i++) {
+        const file = `assets/memories/${id}/${rowKey}-${i}.jpg`;
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <img src="${file}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="card-placeholder" style="display:flex;">${rowKey}-${i}.jpg</div>
+        `;
+        cards.appendChild(card);
+      }
+      rowsContainer.appendChild(sec);
+    });
+
+    // Mark active sidebar profile
+    document.querySelectorAll('.sb-item[data-profile]').forEach(el => {
+      el.classList.toggle('active', el.dataset.profile === id);
+    });
+    // Home item active state
+    document.querySelectorAll('.sb-item[data-nav="home"]').forEach(el => el.classList.add('active'));
+    document.querySelectorAll('.sb-item[data-nav="credits"]').forEach(el => el.classList.remove('active'));
+
+    showScene('home');
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  // FULLSCREEN PLAYER (Play button on hero)
+  // ══════════════════════════════════════════════════════════════════
+  const fsPlayer  = document.getElementById('fsPlayer');
+  const fsVideo   = document.getElementById('fsVideo');
+  const fsClose   = document.getElementById('fsClose');
+  const fsNoVideo = document.getElementById('fsNoVideo');
+  const heroPlayBtn = document.getElementById('heroPlayBtn');
+
+  heroPlayBtn.addEventListener('click', async () => {
+    if (!currentProfile) return;
+
+    // Reset
+    fsVideo.pause();
+    fsVideo.querySelectorAll('source').forEach(s => s.remove());
+    fsVideo.removeAttribute('src');
+
+    const src = `assets/heroes/hero-${currentProfile}.mp4`;
+    const source = document.createElement('source');
+    source.src = src;
+    source.type = 'video/mp4';
+    fsVideo.appendChild(source);
+    fsVideo.load();
+
+    fsPlayer.classList.add('active');
+    fsNoVideo.hidden = true;
+    fsVideo.style.display = '';
+
+    try { await fsPlayer.requestFullscreen?.(); } catch (e) { /* ignore */ }
+
+    fsVideo.addEventListener('error', () => {
+      fsVideo.style.display = 'none';
+      fsNoVideo.hidden = false;
+    }, { once: true });
+
+    try {
+      fsVideo.muted = false;
+      await fsVideo.play();
+    } catch (e) {
+      // user gesture should suffice; if denied, leave paused
+    }
+  });
+
+  function closeFullscreen() {
+    fsPlayer.classList.remove('active');
+    fsVideo.pause();
+    if (document.fullscreenElement) document.exitFullscreen?.();
+  }
+  fsClose.addEventListener('click', closeFullscreen);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && fsPlayer.classList.contains('active')) closeFullscreen();
+  });
+
+  // ══════════════════════════════════════════════════════════════════
+  // SCENE 4 — CREDITS (rolling)
+  // ══════════════════════════════════════════════════════════════════
+  const creditsRoll = document.getElementById('creditsRoll');
+  const credits = cfg.credits;
+
+  function renderCredits() {
+    const allItems = [...credits.items, ...credits.customCredits];
+
+    let html = `
+      <div class="credits-intro">
+        <div class="intro-tag">${tpl(credits.introTag || '')}</div>
+        <div class="intro-title">${tpl(credits.introTitle || '')}</div>
+      </div>
+      <div class="credits-list">
+    `;
+
+    let inCustom = false;
+    const customStart = credits.items.length;
+    allItems.forEach((item, idx) => {
+      if (idx === customStart) inCustom = true;
+      if (item.heading) {
+        html += `<div class="cr-heading${inCustom && idx === customStart ? ' is-custom' : ''}">${tpl(item.heading)}</div>`;
+      } else {
+        html += `
+          <div class="cr-label">${tpl(item.label)}</div>
+          <div class="cr-value">${tpl(item.value)}</div>
+        `;
+      }
+    });
+
+    html += `
+      </div>
+      <div class="credits-end">${tpl(credits.endText || '')}</div>
+    `;
+    creditsRoll.innerHTML = html;
+    creditsRoll.style.setProperty('--roll-duration', `${credits.rollDuration || 75}s`);
+  }
+  renderCredits();
+
+  // ─── Credits clip player controls ───
+  const clip       = document.getElementById('creditsClip');
+  const clipPh     = document.getElementById('creditsClipPlaceholder');
+  const clipPause  = document.getElementById('clipPauseBtn');
+  const clipMute   = document.getElementById('clipMuteBtn');
+  const clipProg   = document.querySelector('.clip-progress');
+
+  clip.addEventListener('loadeddata', () => clipPh.style.display = 'none');
+  clip.addEventListener('error',      () => clip.style.display = 'none');
+  clip.addEventListener('timeupdate', () => {
+    if (clip.duration) {
+      clipProg.style.setProperty('--progress', `${(clip.currentTime / clip.duration) * 100}%`);
+    }
+  });
+
+  const pauseSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+  const playSvg  = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+
+  clipPause.addEventListener('click', () => {
+    if (clip.paused) { clip.play(); clipPause.innerHTML = pauseSvg; clipPause.title = 'Pause'; }
+    else             { clip.pause(); clipPause.innerHTML = playSvg;  clipPause.title = 'Play';  }
+  });
+
+  clipMute.addEventListener('click', () => {
+    clip.muted = !clip.muted;
+    clipMute.title = clip.muted ? 'Unmute' : 'Mute';
+  });
+})();
