@@ -955,6 +955,9 @@ button { font-family: inherit; }
   display: flex;
 }
 .clip-mute svg { width: 14px; height: 14px; }
+.clip-mute .icon-vol-off { display: none; }
+.clip-mute.is-muted .icon-vol-on  { display: none; }
+.clip-mute.is-muted .icon-vol-off { display: block; }
 
 .clip-progress {
   flex: 1;

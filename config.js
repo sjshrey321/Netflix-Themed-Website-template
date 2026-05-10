@@ -43,7 +43,7 @@ const config = {
   profiles: {
     "1month": {
       label: "1 Month",
-      heroLabel: "N SERIES",
+      heroLabel: "SERIES",
       heroDescription: "Where it all began — the awkward first hellos, the unstoppable laughs, and the moments we knew this was something special.",
       rows: {
         popular:  { title: "Popular on Netflix", count: 6 },
@@ -53,7 +53,7 @@ const config = {
     },
     "3month": {
       label: "3 Months",
-      heroLabel: "N SERIES",
+      heroLabel: "SERIES",
       heroDescription: "Three months in. The texts got longer, the silences got cozier, and somewhere between the late-night calls and shared memes, this became home.",
       rows: {
         popular:  { title: "Popular on Netflix", count: 6 },
@@ -63,7 +63,7 @@ const config = {
     },
     "6month": {
       label: "6 Months",
-      heroLabel: "N SERIES",
+      heroLabel: "SERIES",
       heroDescription: "Half a year. Half a thousand inside jokes. We've fought, we've forgiven, we've grown — and somehow, you still make me laugh like it's day one.",
       rows: {
         popular:  { title: "Popular on Netflix", count: 6 },
@@ -73,7 +73,7 @@ const config = {
     },
     "1year": {
       label: "1 Year",
-      heroLabel: "N SERIES",
+      heroLabel: "SERIES",
       heroDescription: "365 days of choosing each other. Every season, every storm, every soft Sunday morning — we built something steady. And we're just getting started.",
       rows: {
         popular:  { title: "Popular on Netflix", count: 6 },

@@ -211,7 +211,7 @@
     currentProfile = id;
 
     // Hero text
-    heroLabelText.textContent = profile.heroLabel || 'N SERIES';
+    heroLabelText.textContent = profile.heroLabel || 'SERIES';
     heroTitle.textContent     = tpl(cfg.heroTitleTemplate);
     heroDesc.textContent      = tpl(profile.heroDescription);
 
@@ -401,13 +401,33 @@
   const clipMute   = document.getElementById('clipMuteBtn');
   const clipProg   = document.querySelector('.clip-progress');
 
-  clip.addEventListener('loadeddata', () => clipPh.style.display = 'none');
+  // Credits clip default: audio ON. The user has already tapped "Tap to Begin",
+  // so the document has a gesture and the browser should allow autoplay-with-sound.
+  // Fall back to muted only if the browser still blocks it.
+  clip.muted = false;
+
+  clip.addEventListener('loadeddata', () => {
+    clipPh.style.display = 'none';
+    const p = clip.play();
+    if (p && p.catch) {
+      p.catch(() => {
+        clip.muted = true;
+        updateClipMuteUI();
+        clip.play().catch(() => {});
+      });
+    }
+  });
   clip.addEventListener('error',      () => clip.style.display = 'none');
   clip.addEventListener('timeupdate', () => {
     if (clip.duration) {
       clipProg.style.setProperty('--progress', `${(clip.currentTime / clip.duration) * 100}%`);
     }
   });
+
+  function updateClipMuteUI() {
+    clipMute.classList.toggle('is-muted', clip.muted);
+    clipMute.title = clip.muted ? 'Unmute' : 'Mute';
+  }
 
   const pauseSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
   const playSvg  = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
@@ -419,8 +439,11 @@
 
   clipMute.addEventListener('click', () => {
     clip.muted = !clip.muted;
-    clipMute.title = clip.muted ? 'Unmute' : 'Mute';
+    // Always make sure it's playing after a user gesture
+    clip.play().catch(() => {});
+    updateClipMuteUI();
   });
+  updateClipMuteUI();
 
   // ══════════════════════════════════════════════════════════════════
   // HERO VIDEO MUTE TOGGLE (per-profile audio)
