@@ -9,6 +9,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
+  <!-- Performance: prefetch intro video so boot is instant after Tap-to-Begin -->
+  <link rel="preload" as="video" href="assets/intro/intro.mp4" type="video/mp4">
+  <!-- Performance: warn the browser we'll need scripts soon -->
+  <link rel="preload" as="script" href="config.js">
+  <link rel="preload" as="script" href="app.js">
 </head>
 <body data-scene="boot">
 
@@ -80,7 +85,7 @@
       <!-- Hero -->
       <section class="hero">
         <div class="hero-media">
-          <video class="hero-video" id="heroVideo" autoplay loop playsinline></video>
+          <video class="hero-video" id="heroVideo" autoplay loop playsinline preload="metadata"></video>
           <button class="hero-mute" id="heroMuteBtn" title="Mute / Unmute" aria-label="Mute hero video">
             <svg class="icon-vol-on" viewBox="0 0 24 24" fill="currentColor"><path d="M3 10v4a1 1 0 0 0 1 1h3l4 4a1 1 0 0 0 1.7-.7V5.7a1 1 0 0 0-1.7-.7L7 9H4a1 1 0 0 0-1 1zm13 2a4 4 0 0 0-2-3.46v6.92A4 4 0 0 0 16 12zm-2-7v2.06a6 6 0 0 1 0 9.88V19a8 8 0 0 0 0-14z"/></svg>
             <svg class="icon-vol-off" viewBox="0 0 24 24" fill="currentColor"><path d="M3 10v4a1 1 0 0 0 1 1h3l4 4a1 1 0 0 0 1.7-.7V5.7a1 1 0 0 0-1.7-.7L7 9H4a1 1 0 0 0-1 1zm14.5 2-2.6 2.6a1 1 0 1 1-1.4-1.4l1.2-1.2-1.2-1.2a1 1 0 1 1 1.4-1.4l1.2 1.2 1.2-1.2a1 1 0 1 1 1.4 1.4L18.9 12l1.2 1.2a1 1 0 1 1-1.4 1.4L17.5 12z"/></svg>
@@ -115,7 +120,7 @@
 
     <!-- Background -->
     <div class="credits-bg">
-      <img id="creditsBgImg" src="assets/credits/credits-bg.jpg" alt=""
+      <img id="creditsBgImg" alt="" loading="lazy" decoding="async"
            onload="this.classList.add('loaded')"
            onerror="this.style.display='none'">
     </div>
@@ -145,7 +150,7 @@
 
     <!-- Floating clip player -->
     <div class="clip-player">
-      <video id="creditsClip" autoplay loop playsinline>
+      <video id="creditsClip" autoplay loop playsinline preload="metadata">
         <source src="assets/credits/credits-clip.mp4" type="video/mp4">
       </video>
       <div class="clip-placeholder" id="creditsClipPlaceholder">your clip plays here</div>

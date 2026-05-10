@@ -43,8 +43,14 @@
   // through fallbacks before giving up and revealing the placeholder.
   // ──────────────────────────────────────────────────────────────────
   const IMG_EXT_FALLBACKS = ['.jpg', '.jpeg', '.png', '.webp', '.JPG', '.JPEG', '.PNG', '.WEBP'];
-  function setupTolerantImg(img, basePath) {
+  function setupTolerantImg(img, basePath, opts = {}) {
     let i = 0;
+    // Performance: async decode never blocks the main thread.
+    img.decoding = 'async';
+    // Lazy-load by default for off-screen / horizontally-scrolled images;
+    // critical above-the-fold images opt out via opts.eager = true.
+    if (!opts.eager) img.loading = 'lazy';
+    if (opts.priority) img.setAttribute('fetchpriority', opts.priority);
     img.src = basePath + IMG_EXT_FALLBACKS[i];
     img.addEventListener('load', () => {
       img.classList.add('loaded');
@@ -71,6 +77,7 @@
     credits:  document.getElementById('sceneCredits')
   };
 
+  let creditsAssetsKicked = false;
   function showScene(name) {
     Object.entries(scenes).forEach(([k, el]) => {
       if (k === name) el.classList.add('active');
@@ -88,6 +95,12 @@
       } else {
         hv.pause();
       }
+    }
+    // Defer credits-only assets until first navigation to credits
+    if (name === 'credits' && !creditsAssetsKicked) {
+      creditsAssetsKicked = true;
+      const bg = document.getElementById('creditsBgImg');
+      if (bg && !bg.src) bg.src = 'assets/credits/credits-bg.jpg';
     }
     // Pause credits clip too when not on credits
     const cc = document.getElementById('creditsClip');
@@ -165,7 +178,9 @@
       </div>
       <div class="profile-name">${p.label}</div>
     `;
-    setupTolerantImg(card.querySelector('.avatar img'), `assets/profiles/profile-${id}`);
+    // Profile avatars are above-the-fold on the "Who's watching" screen → eager + high priority
+    setupTolerantImg(card.querySelector('.avatar img'), `assets/profiles/profile-${id}`,
+                     { eager: true, priority: 'high' });
 
     card.addEventListener('click', () => loadProfile(id));
     profilesContainer.appendChild(card);
@@ -191,7 +206,9 @@
         </div>
         <div class="sb-label">${p.label}</div>
       `;
-      setupTolerantImg(item.querySelector('.sb-icon-img'), `assets/profiles/profile-${id}`);
+      // Sidebar icons are tiny + always visible → eager
+      setupTolerantImg(item.querySelector('.sb-icon-img'), `assets/profiles/profile-${id}`,
+                       { eager: true });
       item.addEventListener('click', () => loadProfile(id));
       target.appendChild(item);
     });
@@ -294,11 +311,15 @@
         const basePath = `assets/memories/${id}/${rowKey}-${i}`;
         const card = document.createElement('div');
         card.className = 'card';
+        // Reserve aspect ratio so lazy-loading works correctly without layout shift
         card.innerHTML = `
           <div class="card-placeholder">${rowKey}-${i}.jpg</div>
-          <img alt="">
+          <img alt="" width="230" height="130">
         `;
-        setupTolerantImg(card.querySelector('img'), basePath);
+        // Memory cards: lazy + low priority (most are off-screen in horizontal scroll).
+        // Only the first card in each row gets normal priority so the row has something visible fast.
+        setupTolerantImg(card.querySelector('img'), basePath,
+                         { priority: i === 1 ? 'auto' : 'low' });
         cards.appendChild(card);
       }
       rowsContainer.appendChild(sec);
