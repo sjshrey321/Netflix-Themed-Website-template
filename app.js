@@ -101,12 +101,30 @@
       creditsAssetsKicked = true;
       const bg = document.getElementById('creditsBgImg');
       if (bg && !bg.src) bg.src = 'assets/credits/credits-bg.jpg';
+      // Force the clip video to actually fetch frames now (preload="metadata"
+      // means it hasn't pulled video data yet). Without this the audio can
+      // start while the frames are still buffering and the placeholder
+      // stays on top.
+      const ccFirst = document.getElementById('creditsClip');
+      if (ccFirst) {
+        ccFirst.load();
+      }
     }
     // Pause credits clip too when not on credits
     const cc = document.getElementById('creditsClip');
     if (cc) {
-      if (name === 'credits') { const p = cc.play(); if (p && p.catch) p.catch(() => {}); }
-      else cc.pause();
+      if (name === 'credits') {
+        const p = cc.play();
+        if (p && p.catch) {
+          p.catch(() => {
+            cc.muted = true;
+            if (typeof updateClipMuteUI === 'function') updateClipMuteUI();
+            cc.play().catch(() => {});
+          });
+        }
+      } else {
+        cc.pause();
+      }
     }
   }
 
@@ -450,18 +468,22 @@
   // Fall back to muted only if the browser still blocks it.
   clip.muted = false;
 
-  clip.addEventListener('loadeddata', () => {
+  // Reveal the video frame as soon as ANY of these signals fire — the most
+  // reliable being `playing` (frames are actually being painted).
+  // We don't trust just `loadeddata` because with preload="metadata" some
+  // browsers fire it inconsistently when the element starts hidden.
+  function revealClip() {
+    clip.style.display = '';
     clipPh.style.display = 'none';
-    const p = clip.play();
-    if (p && p.catch) {
-      p.catch(() => {
-        clip.muted = true;
-        updateClipMuteUI();
-        clip.play().catch(() => {});
-      });
-    }
+  }
+  clip.addEventListener('loadeddata', revealClip);
+  clip.addEventListener('canplay',    revealClip);
+  clip.addEventListener('playing',    revealClip);
+
+  clip.addEventListener('error', () => {
+    // Only hide the video if it truly failed to ever load metadata
+    if (clip.readyState === 0) clip.style.display = 'none';
   });
-  clip.addEventListener('error',      () => clip.style.display = 'none');
   clip.addEventListener('timeupdate', () => {
     if (clip.duration) {
       clipProg.style.setProperty('--progress', `${(clip.currentTime / clip.duration) * 100}%`);
