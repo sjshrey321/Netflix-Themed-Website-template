@@ -220,7 +220,8 @@
   document.querySelectorAll('[data-nav]').forEach(el => {
     el.addEventListener('click', () => {
       const target = el.dataset.nav;
-      if (target === 'home')    { if (!currentProfile) loadProfile(cfg.profileOrder[0]); else showScene('home'); }
+      // Home = the "Who's watching?" profile picker (Netflix-style)
+      if (target === 'home')    showScene('profiles');
       if (target === 'credits') showScene('credits');
     });
   });
@@ -325,12 +326,11 @@
       rowsContainer.appendChild(sec);
     });
 
-    // Mark active sidebar profile
+    // Mark active sidebar profile (the active *thing* is the profile, not Home)
     document.querySelectorAll('.sb-item[data-profile]').forEach(el => {
       el.classList.toggle('active', el.dataset.profile === id);
     });
-    // Home item active state
-    document.querySelectorAll('.sb-item[data-nav="home"]').forEach(el => el.classList.add('active'));
+    document.querySelectorAll('.sb-item[data-nav="home"]').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.sb-item[data-nav="credits"]').forEach(el => el.classList.remove('active'));
 
     showScene('home');
