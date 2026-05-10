@@ -702,7 +702,11 @@ button { font-family: inherit; }
 .fs-player video {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  /* Match the inline hero framing: fill the screen and crop overflow.
+     Use object-fit:cover (same as .hero-media video) so the fullscreen
+     experience looks like a seamless zoom of what was already on screen,
+     instead of suddenly showing the raw file with black letterbox bars. */
+  object-fit: cover;
   background: #000;
 }
 
