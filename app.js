@@ -131,12 +131,13 @@
 
     card.innerHTML = `
       <div class="avatar">
-        <img src="assets/profiles/profile-${id}.jpg" alt="${p.label}"
-             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-        <div class="avatar-placeholder" style="display:flex;">
+        <div class="avatar-placeholder">
           <span class="pl-num">${num}</span>
           <span class="pl-unit">${unit}</span>
         </div>
+        <img src="assets/profiles/profile-${id}.jpg" alt="${p.label}"
+             onload="this.classList.add('loaded')"
+             onerror="this.remove()">
       </div>
       <div class="profile-name">${p.label}</div>
     `;
@@ -159,8 +160,12 @@
       item.className = 'sb-item';
       item.dataset.profile = id;
       item.innerHTML = `
-        <img src="assets/profiles/profile-${id}.jpg" class="sb-icon-img" alt=""
-             onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'sb-icon-placeholder p-${id}',textContent:'${short}'}))">
+        <div class="sb-icon-wrap">
+          <div class="sb-icon-placeholder p-${id}">${short}</div>
+          <img src="assets/profiles/profile-${id}.jpg" class="sb-icon-img" alt=""
+               onload="this.classList.add('loaded')"
+               onerror="this.remove()">
+        </div>
         <div class="sb-label">${p.label}</div>
       `;
       item.addEventListener('click', () => loadProfile(id));
@@ -266,8 +271,10 @@
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
-          <img src="${file}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-          <div class="card-placeholder" style="display:flex;">${rowKey}-${i}.jpg</div>
+          <div class="card-placeholder">${rowKey}-${i}.jpg</div>
+          <img src="${file}" alt=""
+               onload="this.classList.add('loaded')"
+               onerror="this.remove()">
         `;
         cards.appendChild(card);
       }

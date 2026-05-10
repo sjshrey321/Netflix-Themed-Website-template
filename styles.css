@@ -234,20 +234,23 @@ button { font-family: inherit; }
   border: 3px solid transparent;
   transition: all 0.25s ease;
   background: #333;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 .avatar img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  z-index: 2;
 }
+.avatar img.loaded { opacity: 1; }
 
 .avatar-placeholder {
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -256,6 +259,7 @@ button { font-family: inherit; }
   color: #fff;
   font-weight: 700;
   letter-spacing: 2px;
+  z-index: 1;
 }
 .avatar-placeholder .pl-num {
   font-size: 56px;
@@ -377,20 +381,34 @@ button { font-family: inherit; }
 .sb-item.active .sb-icon { color: #fff; background: rgba(229, 9, 20, 0.18); }
 .sb-icon svg { width: 20px; height: 20px; }
 
-.sb-icon-img {
+.sb-icon-wrap {
+  position: relative;
   width: 36px;
   height: 36px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.sb-icon-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   border-radius: 6px;
   object-fit: cover;
-  flex-shrink: 0;
   display: block;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  z-index: 2;
 }
+.sb-icon-img.loaded { opacity: 1; }
 
 .sb-icon-placeholder {
-  width: 36px;
-  height: 36px;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   border-radius: 6px;
-  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -398,6 +416,7 @@ button { font-family: inherit; }
   font-size: 14px;
   font-weight: 700;
   color: #fff;
+  z-index: 1;
 }
 .sb-icon-placeholder.p-1month { background: linear-gradient(135deg, #ff7eb9, #ff65a3); }
 .sb-icon-placeholder.p-3month { background: linear-gradient(135deg, #7afcff, #4facfe); }
@@ -628,12 +647,20 @@ button { font-family: inherit; }
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 .card img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  z-index: 2;
 }
+.card img.loaded { opacity: 1; }
 .card-placeholder {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   display: flex;
@@ -645,6 +672,7 @@ button { font-family: inherit; }
   text-align: center;
   padding: 8px;
   text-transform: uppercase;
+  z-index: 1;
 }
 .row.popular  .card-placeholder { background: linear-gradient(135deg, #722f37, #b94060); }
 .row.recent   .card-placeholder { background: linear-gradient(135deg, #1d3557, #457b9d); }
