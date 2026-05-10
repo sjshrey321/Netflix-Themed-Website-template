@@ -52,7 +52,28 @@
     });
     document.body.dataset.scene = name;
     window.scrollTo(0, 0);
+
+    // Hero audio policy: only the home scene should be heard.
+    const hv = document.getElementById('heroVideo');
+    if (hv) {
+      if (name === 'home') {
+        hv.muted = heroMutedByUser;
+        const p = hv.play(); if (p && p.catch) p.catch(() => {});
+      } else {
+        hv.pause();
+      }
+    }
+    // Pause credits clip too when not on credits
+    const cc = document.getElementById('creditsClip');
+    if (cc) {
+      if (name === 'credits') { const p = cc.play(); if (p && p.catch) p.catch(() => {}); }
+      else cc.pause();
+    }
   }
+
+  // User-controlled mute state for the hero video. Default = unmuted (sound on),
+  // because the user passed the "Tap to Begin" gate which counts as a gesture.
+  let heroMutedByUser = false;
 
   // ══════════════════════════════════════════════════════════════════
   // SCENE 1 — BOOT
@@ -166,6 +187,13 @@
   const heroVideo       = document.getElementById('heroVideo');
   const heroImg         = document.getElementById('heroImg');
   const heroPlaceholder = document.getElementById('heroPlaceholder');
+
+  // Safety net: if any browser ever fires 'ended' on a looping video
+  // (rare edge cases), restart from the top.
+  heroVideo.addEventListener('ended', () => {
+    heroVideo.currentTime = 0;
+    heroVideo.play().catch(() => {});
+  });
   const heroLabelText   = document.getElementById('heroLabelText');
   const heroTitle       = document.getElementById('heroTitle');
   const heroDesc        = document.getElementById('heroDesc');
@@ -197,11 +225,24 @@
     source.src = videoSrc;
     source.type = 'video/mp4';
     heroVideo.appendChild(source);
+    // Bulletproof loop — set property in addition to the HTML attribute,
+    // and re-trigger play if any browser ever fires 'ended'.
+    heroVideo.loop = true;
     heroVideo.load();
 
     heroVideo.addEventListener('loadeddata', () => {
       heroPlaceholder.style.display = 'none';
       heroImg.hidden = true;
+      // Try to play with the user's chosen mute state. If the browser blocks
+      // it (no gesture yet), retry muted so it at least plays visually.
+      heroVideo.muted = heroMutedByUser;
+      const p = heroVideo.play();
+      if (p && p.catch) p.catch(() => {
+        heroVideo.muted = true;
+        heroMutedByUser = true;
+        updateHeroMuteUI();
+        heroVideo.play().catch(() => {});
+      });
     }, { once: true });
 
     heroVideo.addEventListener('error', () => {
@@ -256,6 +297,9 @@
   heroPlayBtn.addEventListener('click', async () => {
     if (!currentProfile) return;
 
+    // Pause inline hero so audio doesn't double up with the fullscreen player
+    heroVideo.pause();
+
     // Reset
     fsVideo.pause();
     fsVideo.querySelectorAll('source').forEach(s => s.remove());
@@ -266,6 +310,7 @@
     source.src = src;
     source.type = 'video/mp4';
     fsVideo.appendChild(source);
+    fsVideo.loop = true;
     fsVideo.load();
 
     fsPlayer.classList.add('active');
@@ -291,6 +336,11 @@
     fsPlayer.classList.remove('active');
     fsVideo.pause();
     if (document.fullscreenElement) document.exitFullscreen?.();
+    // Resume the inline hero with the user's chosen mute state
+    if (document.body.dataset.scene === 'home') {
+      heroVideo.muted = heroMutedByUser;
+      heroVideo.play().catch(() => {});
+    }
   }
   fsClose.addEventListener('click', closeFullscreen);
   document.addEventListener('keydown', (e) => {
@@ -364,4 +414,27 @@
     clip.muted = !clip.muted;
     clipMute.title = clip.muted ? 'Unmute' : 'Mute';
   });
+
+  // ══════════════════════════════════════════════════════════════════
+  // HERO VIDEO MUTE TOGGLE (per-profile audio)
+  // ══════════════════════════════════════════════════════════════════
+  const heroMuteBtn = document.getElementById('heroMuteBtn');
+
+  function updateHeroMuteUI() {
+    if (!heroMuteBtn) return;
+    heroMuteBtn.classList.toggle('is-muted', heroMutedByUser);
+    heroMuteBtn.title = heroMutedByUser ? 'Unmute' : 'Mute';
+  }
+
+  if (heroMuteBtn) {
+    heroMuteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      heroMutedByUser = !heroMutedByUser;
+      heroVideo.muted = heroMutedByUser;
+      // Always make sure it's playing after a user gesture
+      heroVideo.play().catch(() => {});
+      updateHeroMuteUI();
+    });
+    updateHeroMuteUI();
+  }
 })();

@@ -80,7 +80,11 @@
       <!-- Hero -->
       <section class="hero">
         <div class="hero-media">
-          <video class="hero-video" id="heroVideo" autoplay loop muted playsinline></video>
+          <video class="hero-video" id="heroVideo" autoplay loop playsinline></video>
+          <button class="hero-mute" id="heroMuteBtn" title="Mute / Unmute" aria-label="Mute hero video">
+            <svg class="icon-vol-on" viewBox="0 0 24 24" fill="currentColor"><path d="M3 10v4a1 1 0 0 0 1 1h3l4 4a1 1 0 0 0 1.7-.7V5.7a1 1 0 0 0-1.7-.7L7 9H4a1 1 0 0 0-1 1zm13 2a4 4 0 0 0-2-3.46v6.92A4 4 0 0 0 16 12zm-2-7v2.06a6 6 0 0 1 0 9.88V19a8 8 0 0 0 0-14z"/></svg>
+            <svg class="icon-vol-off" viewBox="0 0 24 24" fill="currentColor"><path d="M3 10v4a1 1 0 0 0 1 1h3l4 4a1 1 0 0 0 1.7-.7V5.7a1 1 0 0 0-1.7-.7L7 9H4a1 1 0 0 0-1 1zm14.5 2-2.6 2.6a1 1 0 1 1-1.4-1.4l1.2-1.2-1.2-1.2a1 1 0 1 1 1.4-1.4l1.2 1.2 1.2-1.2a1 1 0 1 1 1.4 1.4L18.9 12l1.2 1.2a1 1 0 1 1-1.4 1.4L17.5 12z"/></svg>
+          </button>
           <img class="hero-img" id="heroImg" alt="" hidden>
           <div class="hero-media-placeholder" id="heroPlaceholder">hero asset goes here</div>
         </div>
@@ -170,7 +174,7 @@
        ════════════════════════════════════════════════════════════ -->
   <div class="fs-player" id="fsPlayer">
     <button class="fs-close" id="fsClose" title="Close">✕</button>
-    <video id="fsVideo" controls playsinline></video>
+    <video id="fsVideo" controls loop playsinline></video>
     <div class="fs-no-video" id="fsNoVideo" hidden>
       🎬 hero video for this profile is missing — drop it in <code>assets/heroes/</code>
     </div>
