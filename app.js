@@ -36,6 +36,32 @@
   });
 
   // ──────────────────────────────────────────────────────────────────
+  // Format-tolerant image loader.
+  // User drops a photo named `popular-4.jpg` — but if they saved it as
+  // .jpeg / .png / .webp / .JPG / .JPEG instead, we still find it.
+  // The img element starts with the `.jpg` URL; if it 404s we walk
+  // through fallbacks before giving up and revealing the placeholder.
+  // ──────────────────────────────────────────────────────────────────
+  const IMG_EXT_FALLBACKS = ['.jpg', '.jpeg', '.png', '.webp', '.JPG', '.JPEG', '.PNG', '.WEBP'];
+  function setupTolerantImg(img, basePath) {
+    let i = 0;
+    img.src = basePath + IMG_EXT_FALLBACKS[i];
+    img.addEventListener('load', () => {
+      img.classList.add('loaded');
+      const parent = img.parentElement;
+      if (parent) parent.classList.add('has-image');
+    });
+    img.addEventListener('error', () => {
+      i++;
+      if (i < IMG_EXT_FALLBACKS.length) {
+        img.src = basePath + IMG_EXT_FALLBACKS[i];
+      } else {
+        img.remove();
+      }
+    });
+  }
+
+  // ──────────────────────────────────────────────────────────────────
   // Scene management
   // ──────────────────────────────────────────────────────────────────
   const scenes = {
@@ -135,12 +161,11 @@
           <span class="pl-num">${num}</span>
           <span class="pl-unit">${unit}</span>
         </div>
-        <img src="assets/profiles/profile-${id}.jpg" alt="${p.label}"
-             onload="this.classList.add('loaded'); this.parentElement.classList.add('has-image');"
-             onerror="this.remove()">
+        <img alt="${p.label}">
       </div>
       <div class="profile-name">${p.label}</div>
     `;
+    setupTolerantImg(card.querySelector('.avatar img'), `assets/profiles/profile-${id}`);
 
     card.addEventListener('click', () => loadProfile(id));
     profilesContainer.appendChild(card);
@@ -162,12 +187,11 @@
       item.innerHTML = `
         <div class="sb-icon-wrap">
           <div class="sb-icon-placeholder p-${id}">${short}</div>
-          <img src="assets/profiles/profile-${id}.jpg" class="sb-icon-img" alt=""
-               onload="this.classList.add('loaded'); this.parentElement.classList.add('has-image');"
-               onerror="this.remove()">
+          <img class="sb-icon-img" alt="">
         </div>
         <div class="sb-label">${p.label}</div>
       `;
+      setupTolerantImg(item.querySelector('.sb-icon-img'), `assets/profiles/profile-${id}`);
       item.addEventListener('click', () => loadProfile(id));
       target.appendChild(item);
     });
@@ -267,15 +291,14 @@
       sec.innerHTML = `<h2 class="row-title">${row.title}</h2><div class="row-cards"></div>`;
       const cards = sec.querySelector('.row-cards');
       for (let i = 1; i <= (row.count || 6); i++) {
-        const file = `assets/memories/${id}/${rowKey}-${i}.jpg`;
+        const basePath = `assets/memories/${id}/${rowKey}-${i}`;
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
           <div class="card-placeholder">${rowKey}-${i}.jpg</div>
-          <img src="${file}" alt=""
-               onload="this.classList.add('loaded'); this.parentElement.classList.add('has-image');"
-               onerror="this.remove()">
+          <img alt="">
         `;
+        setupTolerantImg(card.querySelector('img'), basePath);
         cards.appendChild(card);
       }
       rowsContainer.appendChild(sec);
