@@ -136,7 +136,7 @@
           <span class="pl-unit">${unit}</span>
         </div>
         <img src="assets/profiles/profile-${id}.jpg" alt="${p.label}"
-             onload="this.classList.add('loaded')"
+             onload="this.classList.add('loaded'); this.parentElement.classList.add('has-image');"
              onerror="this.remove()">
       </div>
       <div class="profile-name">${p.label}</div>
@@ -163,7 +163,7 @@
         <div class="sb-icon-wrap">
           <div class="sb-icon-placeholder p-${id}">${short}</div>
           <img src="assets/profiles/profile-${id}.jpg" class="sb-icon-img" alt=""
-               onload="this.classList.add('loaded')"
+               onload="this.classList.add('loaded'); this.parentElement.classList.add('has-image');"
                onerror="this.remove()">
         </div>
         <div class="sb-label">${p.label}</div>
@@ -273,7 +273,7 @@
         card.innerHTML = `
           <div class="card-placeholder">${rowKey}-${i}.jpg</div>
           <img src="${file}" alt=""
-               onload="this.classList.add('loaded')"
+               onload="this.classList.add('loaded'); this.parentElement.classList.add('has-image');"
                onerror="this.remove()">
         `;
         cards.appendChild(card);
